@@ -1,0 +1,19 @@
+{
+  "name": "webjs",
+  "version": "1.0.0",
+  "description": "Web crawler in javascript.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "javascript"
+  ],
+  "author": "shinich39 <shinich39@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^22.6.5"
+  }
+}
