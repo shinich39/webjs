@@ -1,10 +1,15 @@
 'use strict';
 
-import util from "./libs/util.js";
 import * as cheerio from 'cheerio';
 import puppeteer from "puppeteer";
 
 const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36";
+
+function wait(delay) {
+  return new Promise(function(resolve) {
+    return setTimeout(resolve, delay);
+  });
+}
 
 class Web {
   constructor() {
@@ -71,7 +76,7 @@ Web.prototype.wait = async function(delay, selector) {
       timeout: delay,
     });
   } else {
-    await util.wait(delay);
+    await wait(delay);
   }
 }
 
