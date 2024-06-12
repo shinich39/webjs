@@ -1,7 +1,10 @@
 'use strict';
 
+import util from "./libs/util.js";
 import * as cheerio from 'cheerio';
 import puppeteer from "puppeteer";
+
+const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.125 Safari/537.36";
 
 class Web {
   constructor() {
@@ -19,6 +22,7 @@ Web.prototype.init = async function() {
   }
   this.browser = await puppeteer.launch();
   this.page = await this.browser.newPage();
+  await this.page.setUserAgent(USER_AGENT);
 }
 
 /**
@@ -44,49 +48,83 @@ Web.prototype.get = async function(url) {
   if (!this.browser) {
     throw new Error("Browser has not been initialized.");
   }
+
   await this.page.goto(url);
 }
 
 /**
  * 
- * @param {string} selector 
  * @param {number} delay ms, default 30000
+ * @param {string} selector 
  */
-Web.prototype.wait = async function(selector, delay) {
+Web.prototype.wait = async function(delay, selector) {
   if (!this.browser) {
     throw new Error("Browser has not been initialized.");
   }
 
-  await this.page.waitForSelector(selector, {
-    timeout: delay || 1000 * 30, // 30sec
-  });
+  if (!delay) {
+    delay = 1000 * 30; // 30 sec
+  }
+
+  if (selector) {
+    await this.page.waitForSelector(selector, {
+      timeout: delay,
+    });
+  } else {
+    await util.wait(delay);
+  }
 }
 
 /**
  * 
- * @param {number} delay ms, default 1000
- * @param {number} timeout ms, default 3000
+ * @param {string} selector default document.documentElement
  */
-Web.prototype.scroll = async function(delay, timeout) {
+Web.prototype.scroll = async function(selector) {
   if (!this.browser) {
     throw new Error("Browser has not been initialized.");
   }
 
-  while (true) {
-    const previousHeight = await this.page.evaluate("document.body.scrollHeight");
-    await this.page.evaluate(() => {
-      window.scrollTo(0, document.body.scrollHeight);
-    });
-    try {
-      await this.page.waitForFunction(
-        `document.body.scrollHeight > ${previousHeight}`,
-        { timeout: timeout || 1000 * 3 }
-      );
-    } catch {
-      break;
+  await this.page.evaluate(function(selector) {
+    if (selector) {
+      document.querySelector(selector).scrollTo(0, document.querySelector(selector).scrollHeight);
+    } else {
+      window.scrollTo(0, Math.max(document.documentElement.scrollHeight, document.body.scrollHeight));
     }
-    await new Promise((resolve) => setTimeout(resolve, delay || 1000));
+  }, selector);
+}
+
+/**
+ * 
+ * @param {string} selector default document.documentElement
+ * @returns 
+ */
+Web.prototype.getScroll = async function(selector) {
+  if (!this.browser) {
+    throw new Error("Browser has not been initialized.");
   }
+
+  return await this.page.evaluate(function(selector) {
+    return selector ? 
+      document.querySelector(selector).scrollTop :
+      document.documentElement.scrollTop;
+  }, selector);
+}
+
+/**
+ * 
+ * @param {string} selector default document.documentElement
+ * @returns 
+ */
+Web.prototype.getHeight = async function(selector) {
+  if (!this.browser) {
+    throw new Error("Browser has not been initialized.");
+  }
+
+  return await this.page.evaluate(function(selector) {
+    return selector ? 
+      document.querySelector(selector).scrollHeight :
+      document.documentElement.scrollHeight;
+  }, selector);
 }
 
 /**
@@ -106,9 +144,7 @@ Web.prototype.parse = async function(selectors) {
   }
 
   const content = await this.page.content();
-
   const $ = cheerio.load(content);
-
   return selectors.reduce(function(prev, curr) {
     return prev.concat($(curr).contents().toArray());
   }, []);
