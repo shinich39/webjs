@@ -45,6 +45,18 @@ Web.prototype.destory = async function() {
 }
 
 /**
+ * cheerio.load(data);
+ * 
+ * Ref.
+ * https://cheerio.js.org/docs/basics/selecting
+ * @param {string|object} data
+ * @returns 
+ */
+Web.prototype.load = async function(data) {
+  return cheerio.load(data);
+}
+
+/**
  * 
  * @param {string} url 
  * @returns 
@@ -134,26 +146,43 @@ Web.prototype.getHeight = async function(selector) {
 
 /**
  * 
- * @param {array} selectors default ["body *"]
  * @returns 
  */
-Web.prototype.parse = async function(selectors) {
+Web.prototype.toString = async function() {
   if (!this.browser) {
     throw new Error("Browser has not been initialized.");
   }
+  const content = await this.page.content();
+  return content;
+}
 
+/**
+ * 
+ * @returns 
+ */
+Web.prototype.toObject = async function() {
+  const html = await this.toString();
+  const $ = cheerio.load(html);
+  return $;
+}
+
+/**
+ * 
+ * @param {string[]} selectors default ["body"]
+ * @returns 
+ */
+Web.prototype.toArray = async function(selectors) {
+  const $ = await this.toObject();
   if (typeof selectors === "string") {
     selectors = [selectors];
   } else if (!Array.isArray(selectors)) {
-    selectors = ["body *"];
+    selectors = ["body"];
   }
 
-  const content = await this.page.content();
-  const $ = cheerio.load(content);
   return selectors.reduce(function(prev, curr) {
     return prev.concat($(curr).contents().toArray());
   }, []);
 }
 
 // esm
-export default Web
+export default Web;

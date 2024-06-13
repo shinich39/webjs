@@ -38,7 +38,13 @@ import Web from "webjs";
   }
 
   // get dom elements
-  const elements = await web.parse();
+  // https://cheerio.js.org/docs/basics/selecting
+  const html = await web.toString();
+  const $ = await web.toObject();
+  const elements = await web.toArray(["div", "a"]);
+
+  const $ = web.load(html);
+  const $ = web.load(elements);
 
   // end
 
@@ -46,7 +52,7 @@ import Web from "webjs";
 
   // or continue crawling...
 
-  await web.get(OTHER_URL);
+  await web.get(NEW_URL);
 })();
 ```
 
