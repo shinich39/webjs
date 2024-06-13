@@ -52,7 +52,7 @@ Web.prototype.destory = async function() {
  * @param {string|object} data
  * @returns 
  */
-Web.prototype.load = async function(data) {
+Web.prototype.load = function(data) {
   return cheerio.load(data);
 }
 
